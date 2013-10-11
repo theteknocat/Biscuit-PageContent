@@ -34,6 +34,12 @@ $date = new Date();
 
 		<?php echo ModelForm::text($page,'navigation_label','This will be used for menus and breadcrumbs, if provided, instead of the page title.'); ?>
 
+		<?php
+		if ($page->is_new() || $page->slug() != 'index') {
+			echo ModelForm::text($page,'ext_link','Enter a full URL to a page or external website if you want this page to function as a shortcut that redirects elsewhere.');
+		}
+		?>
+
 		<?php echo ModelForm::textarea($page,'content', true, $allowed_html) ?>
 
 	</fieldset>
@@ -88,38 +94,35 @@ $date = new Date();
 	}
 	?>
 	<?php echo Form::footer($PageContentManager, $page, $PageContentManager->user_can_delete($page), 'Save', $PageContentManager->return_url('Page'), 'this page') ?>
-<script type="text/javascript" charset="utf-8">
+<script type="text/javascript">
 	$(document).ready(function() {
 		Biscuit.Crumbs.Forms.AddValidation('page-form');
-	});
-	tinyMCE.init({
-		mode : "exact",
-		elements: "attr_content",
-		theme: 'advanced',
-		theme_advanced_buttons1: 'undo,redo,|,pasteword,pastetext,|,search,replace,|,justifyleft,justifycenter,justifyright,justifyfull,|,indent,outdent,|,bullist,numlist,|,hr,|,anchor,link,unlink,image,|,charmap<?php if ($Authenticator->user_is_super()) { ?>,|,code<?php } ?>',
-		theme_advanced_buttons2: 'bold,italic,underline,|,sup,sub,styleselect,formatselect,removeformat',
-		theme_advanced_buttons3: 'table,tablecontrols',
-		theme_advanced_buttons4: null,
-		theme_advanced_buttons5: null,
-		theme_advanced_buttons6: null,
-		theme_advanced_toolbar_align: 'left',
-		theme_advanced_toolbar_location: 'top',
-		theme_advanced_resizing: true,
-		theme_advanced_resize_horizontal: false,
-		theme_advanced_statusbar_location: 'bottom',
-		theme_advanced_blockformats: "p,h1,h2,h3,h4",
-		element_format: 'html',
-		relative_urls: false,
-		remove_script_host: true,
-		document_base_url: "<?php echo STANDARD_URL ?>/",
-		skin: 'o2k7',
-		skin_variant: 'silver',
-		width: 610,
-		height: 600,
-		cleanup_on_startup: true,
-		<?php echo $Biscuit->ExtensionTinyMce()->theme_css_setting($page) ?>
-		external_link_list_url : "/tiny_mce_link_list",
-		plugins : "table,safari,style,iespell,insertdatetime,preview,media,searchreplace,contextmenu,paste,directionality,fullscreen,noneditable,visualchars,nonbreaking,template,inlinepopups",
-		file_browser_callback : "tinyBrowser"
+		$('#attr_content').tinymce({
+			theme: 'advanced',
+			theme_advanced_buttons1: 'undo,redo,|,pasteword,pastetext,|,search,replace,|,justifyleft,justifycenter,justifyright,justifyfull,|,indent,outdent,|,bullist,numlist,|,hr,|,anchor,link,unlink,image,|,charmap',
+			theme_advanced_buttons2: 'bold,italic,underline,|,sup,sub,styleselect,formatselect,removeformat',
+			theme_advanced_buttons3: 'table,tablecontrols,|,code',
+			theme_advanced_buttons4: null,
+			theme_advanced_buttons5: null,
+			theme_advanced_buttons6: null,
+			theme_advanced_toolbar_align: 'left',
+			theme_advanced_toolbar_location: 'top',
+			theme_advanced_resizing: true,
+			theme_advanced_resize_horizontal: false,
+			theme_advanced_statusbar_location: 'bottom',
+			theme_advanced_blockformats: "p,h1,h2,h3,h4,div",
+			element_format: 'html',
+			relative_urls: false,
+			remove_script_host: true,
+			document_base_url: "<?php echo STANDARD_URL ?>/",
+			skin: 'cirkuit',
+			width: 626,
+			height: 600,
+			cleanup_on_startup: true,
+			<?php echo $Biscuit->ExtensionTinyMce()->theme_css_setting($page) ?>
+			external_link_list_url : "/tiny_mce_link_list",
+			plugins : "table,style,iespell,insertdatetime,preview,media,searchreplace,contextmenu,paste,directionality,fullscreen,noneditable,visualchars,nonbreaking,template,jqueryinlinepopups",
+			file_browser_callback : "<?php echo $file_browser_callback; ?>"
+		});
 	});
 </script>

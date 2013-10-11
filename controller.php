@@ -3,10 +3,11 @@
  * Module for providing page content editing functionality via rich text editor. Requires Tiny MCE extension.
  * 
  * @package Modules
+ * @subpackage PageContent
  * @author Peter Epp
  * @copyright Copyright (c) 2009 Peter Epp (http://teknocat.org)
  * @license GNU Lesser General Public License (http://www.gnu.org/licenses/lgpl.html)
- * @version 2.0
+ * @version 2.0 $Id: controller.php 14331 2011-10-05 01:12:53Z teknocat $
  **/
 class PageContentManager extends AbstractModuleController {
 	protected $_models = array(
@@ -53,7 +54,7 @@ class PageContentManager extends AbstractModuleController {
 	protected function action_manage_pages() {
 		$this->register_js("footer","content_editor.js");
 		$this->register_css(array('filename' => 'page_manager.css', 'media' => 'screen'));
-		$this->register_css(array('filename' => 'ie.css', 'media' => 'screen'),true);
+		$this->register_css(array('filename' => 'ie7orless.css', 'media' => 'screen'),true,'lte 7');
 		$pages = $this->Page->find_all_editable();
 		$sorted_pages = $this->Biscuit->ExtensionNavigation()->sort_pages($pages);
 		$page_list = $this->Biscuit->ExtensionNavigation()->render_pages_hierarchically($sorted_pages, 0, Navigation::WITH_CHILDREN, 'modules/page_content/views/manage_pages_list.php',array('top_level' => true, 'top_level_parent_id' => 0));
@@ -112,7 +113,13 @@ class PageContentManager extends AbstractModuleController {
 	 * @return bool
 	 * @author Peter Epp
 	 */
-	public function user_can_delete(Page $page) {
+	public function user_can_delete($page = null) {
+		if (empty($page) && !empty($this->params['id'])) {
+			$page = $this->Page->find($this->params['id']);
+		}
+		if (empty($page)) {
+			return Permissions::user_can($this,'delete');
+		}
 		if (!$page->is_new() && $page->allow_delete() == 1) {
 			$children_allow_delete = true;
 			if ($page->has_children()) {
@@ -205,7 +212,7 @@ class PageContentManager extends AbstractModuleController {
 	 * @author Peter Epp
 	 */
 	protected function action_secondary() {
-		if ($this->action() == "index" || $this->action() == 'login') {
+		if ($this->Biscuit->Page->parent() != 9999999 && $this->action() == "index") {
 			$this->set_view_var("page", $this->Biscuit->Page);
 			$this->render('index');
 		}
@@ -253,15 +260,12 @@ class PageContentManager extends AbstractModuleController {
 		return true;
 	}
 	public function return_url($model_name = null) {
-		if ($this->action() == 'delete' || $this->action() == 'new') {
+		if ($this->action() == 'delete' || ($this->action() == 'new' && empty($this->params['return_url']))) {
 			return $this->url('manage_pages');
 		}
 		return parent::return_url($model_name);
 	}
-	public function url($action=null, $id=null) {
-		if (empty($action)) {
-			$action = 'index';
-		}
+	public function url($action='index', $id=null) {
 		if ($action == 'show') {
 			$action = 'index';
 		}
@@ -280,6 +284,9 @@ class PageContentManager extends AbstractModuleController {
 				return '/';
 			} else {
 				$page_slug = $page->slug();
+			}
+			if ($page_slug == 'index') {
+				$page_slug = '';
 			}
 			if (empty($action) || $action == "index") {
 				return '/'.$page_slug;
@@ -310,13 +317,15 @@ class PageContentManager extends AbstractModuleController {
 		}
 	}
 	protected function act_on_compile_footer() {
-		if ($this->is_primary() && ($this->action() == 'edit' || $this->action() == 'new')) {
-			$tb_browser_script = $this->Biscuit->ExtensionTinyMce()->render_tinymce_tb_browser_script();
-		} else if ($this->is_primary() && $this->action() == 'manage_pages') {
-			$tb_browser_script = $this->Biscuit->ExtensionTinyMce()->render_standalone_tb_browser_script();
-		}
-		if (!empty($tb_browser_script)) {
-			$this->Biscuit->append_view_var('footer',$tb_browser_script);
+		if (!$this->Biscuit->module_exists('FileManager')) {
+			if ($this->is_primary() && ($this->action() == 'edit' || $this->action() == 'new')) {
+				$tb_browser_script = $this->Biscuit->ExtensionTinyMce()->render_tinymce_tb_browser_script();
+			} else if ($this->is_primary() && $this->action() == 'manage_pages') {
+				$tb_browser_script = $this->Biscuit->ExtensionTinyMce()->render_standalone_tb_browser_script();
+			}
+			if (!empty($tb_browser_script)) {
+				$this->Biscuit->append_view_var('footer',$tb_browser_script);
+			}
 		}
 	}
 	/**
@@ -330,10 +339,16 @@ class PageContentManager extends AbstractModuleController {
 		$menu_items = array();
 		if ($this->Biscuit->Page->slug() != 'content_editor') {
 			if ($this->user_can_manage_pages() && $this->action() != "manage_pages") {
-				$menu_items['Manage'] = $this->url('manage_pages');
+				$menu_items['Manage'] = array(
+					'url' => $this->url('manage_pages'),
+					'ui-icon' => 'ui-icon-wrench'
+				);
 			}
 			if ($this->user_can_create()) {
-				$menu_items['Create New'] = $this->url('new');
+				$menu_items['New Page'] = array(
+					'url' => $this->url('new'),
+					'ui-icon' => 'ui-icon-plus'
+				);
 			}
 		}
 		if (!empty($menu_items)) {
@@ -341,23 +356,31 @@ class PageContentManager extends AbstractModuleController {
 		}
 	}
 	/**
+	 * Add help menu item
+	 *
+	 * @param string $caller 
+	 * @return void
+	 * @author Peter Epp
+	 */
+	protected function act_on_build_help_menu($caller) {
+		$caller->add_help_for('PageContent');
+	}
+	/**
 	 * Run migrations required for module to be installed properly
 	 *
 	 * @return void
 	 * @author Peter Epp
 	 */
-	public static function install_migration() {
+	public static function install_migration($module_id) {
 		$content_editor_page = DB::fetch_one("SELECT `id` FROM `page_index` WHERE `slug` = 'content_editor'");
 		if (!$content_editor_page) {
 			// Add content_editor page (public access by default):
 			DB::insert("INSERT INTO `page_index` SET `parent` = 9999999, `slug` = 'content_editor', `title` = 'Content Editor'");
-			// Get module row ID:
-			$module_id = DB::fetch_one("SELECT `id` FROM `modules` WHERE `name` = 'PageContent'");
-			// Remove PageContent from module pages first to ensure clean install:
-			DB::query("DELETE FROM `module_pages` WHERE `module_id` = {$module_id} AND `page_name` = 'content_editor'");
-			// Add PageContent to content_editor page:
-			DB::insert("INSERT INTO `module_pages` SET `module_id` = {$module_id}, `page_name` = 'content_editor', `is_primary` = 1");
 		}
+		// Remove PageContent from module pages first to ensure clean install:
+		DB::query("DELETE FROM `module_pages` WHERE `module_id` = {$module_id} AND (`page_name` = 'content_editor' OR `page_name` = 'system-admin')");
+		// Add PageContent to content_editor, system-admin and home pages:
+		DB::insert("INSERT INTO `module_pages` (`module_id`, `page_name`, `is_primary`) VALUES ({$module_id}, 'index', 0), ({$module_id}, 'content_editor', 1), ({$module_id}, 'system-admin', 0)");
 		if (!DB::column_exists_in_table('content','page_index')) {
 			DB::query("ALTER TABLE `page_index` ADD COLUMN `content` longtext, ADD COLUMN `updated` datetime NOT NULL DEFAULT '0000-00-00 00:00:00'");
 		}
@@ -379,25 +402,21 @@ class PageContentManager extends AbstractModuleController {
 	 * @return void
 	 * @author Peter Epp
 	 */
-	public static function uninstall_migration() {
-		$module_id = DB::fetch_one("SELECT `id` FROM `modules` WHERE `name` = 'PageContent'");
+	public static function uninstall_migration($module_id) {
 		DB::query("DELETE FROM `page_index` WHERE `slug` = 'content_editor'");
-		DB::query("DELETE FROM `module_pages` WHERE `module_id` = ".$module_id);
+		DB::query("DELETE FROM `module_pages` WHERE `module_id` = {$module_id}");
 		DB::query("ALTER TABLE `page_index` DROP COLUMN `content`, DROP COLUMN `updated`, DROP COLUMN `allow_delete`, DROP FOREIGN KEY `page_index_ibfk_1`, DROP COLUMN `owner_id`");
 		Permissions::remove(__CLASS__);
 	}
 	/**
-	 * Provide special rewrite rule for the manage_pages action
+	 * Provide URI mapping rule for the manage_pages action
 	 *
 	 * @return array
 	 * @author Peter Epp
 	 */
-	public static function rewrite_rules() {
+	public static function uri_mapping_rules() {
 		return array(
-			array(
-				'pattern' => '/^content_editor\/manage_pages$/',
-				'replacement' => 'page_slug=content_editor&action=manage_pages'
-			)
+			'/^(?P<page_slug>content_editor)\/(?P<action>manage_pages)$/'
 		);
 	}
 	/**

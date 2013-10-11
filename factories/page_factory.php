@@ -3,7 +3,9 @@
  * Custom factory for the PageContent model, since it's involves some special functionality when finding a page by id
  *
  * @package Modules
+ * @subpackage PageContent
  * @author Peter Epp
+ * @version $Id: page_factory.php 13843 2011-07-27 19:45:49Z teknocat $
  */
 class PageFactory extends ModelFactory {
 	/**

@@ -1,7 +1,7 @@
 <?php
 if (!empty($pages[$current_parent_id])) {
 	foreach ($pages[$current_parent_id] as $page) {
-		if ($page->id() != $current_page_id) {
+		if ($page->id() != $current_page_id && $page->slug() != 'index') {
 			$slug_bits = explode('/',$page->slug());
 			$indent = count($slug_bits);
 			$indent_str = str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;',$indent);

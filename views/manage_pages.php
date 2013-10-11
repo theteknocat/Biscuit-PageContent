@@ -1,11 +1,18 @@
 <?php
+if ($Biscuit->module_exists('FileManager')) {
+	$custom_buttons = array(
+		array('href' => '#file-manager', 'label' => 'Manage Files', 'id' => 'file-manager-button', 'classname' => 'file-button'),
+	);
+} else {
+	$custom_buttons = array(
+		array('href' => '#file-manager', 'label' => 'Manage Files', 'id' => 'file-manager-button', 'classname' => 'file-button'),
+		array('href' => '#image-manager', 'label' => 'Manage Images', 'id' => 'image-manager-button', 'classname' => 'image-button')
+	);
+}
 print $Navigation->render_admin_bar($PageContentManager,NULL,array(
 	'has_new_button' => true,
 	'new_button_label' => 'New Page',
-	'custom_buttons' => array(
-		array('href' => '#file-manager', 'label' => 'Manage Files', 'id' => 'file-manager-button'),
-		array('href' => '#image-manager', 'label' => 'Manage Images', 'id' => 'image-manager-button')
-	)
+	'custom_buttons' => $custom_buttons
 ));
 ?>
 <p>Following are all the pages you can modify using the Page Content Manager module. Any pages not listed here are not editable.</p>
@@ -14,9 +21,23 @@ print $Navigation->render_admin_bar($PageContentManager,NULL,array(
 	<p>You must enable Javascript in order to sort pages by drag-and-drop.</p>
 </noscript>
 <?php echo $page_list ?>
-<script type="text/javascript" charset="utf-8">
-	var sortable_request_token = '<?php echo RequestTokens::get() ?>';
+<script type="text/javascript">
+	<?php
+	$token_info = RequestTokens::get();
+	?>
+	var sortable_request_token = '<?php echo $token_info['token']; ?>';
+	var sortable_token_form_id = '<?php echo $token_info['form_id']; ?>';
 	$(document).ready(function() {
+			<?php
+			if ($Biscuit->module_exists('FileManager')) {
+				?>
+		$('#file-manager-button').click(function() {
+			FileManagerActivate.standalone();
+			return false;
+		});
+				<?php
+			} else {
+				?>
 		$('#file-manager-button').click(function() {
 			tinyBrowserPopUp('file',null);
 			return false;
@@ -25,22 +46,25 @@ print $Navigation->render_admin_bar($PageContentManager,NULL,array(
 			tinyBrowserPopUp('image',null);
 			return false;
 		});
+				<?php
+			}
+			?>
 		$('.page-list-container').each(function() {
 			var my_id = $(this).attr('id').substr(20);	// Everything after "page-list-container-"
 			var top_level_parent_id = "page-list-"+my_id;
-			var throbber_id = 'page-list-throbber-'+my_id;
 			$(this).find('dl.page-manager-list').each(function() {
 				if ($(this).children('dd').length > 1) {
-					$(this).children('dd').children('.page-item-container').children('.draggable').show();
+					$(this).children('dd').children('.page-item-container').children('.drag-handle').show();
 					Biscuit.Crumbs.Sortable.create(this,'/content_editor',{
-						handle: '.draggable',
+						handle: '.drag-handle',
 						array_name: 'page_sort',
-						throbber_id: throbber_id,
+						axis: 'y',
 						onUpdate: function() {
+							Biscuit.Crumbs.ShowCoverThrobber(top_level_parent_id, 'Saving...');
 							PageContent.RestripePageList(top_level_parent_id);
 						},
 						onFinish: function(list_id) {
-							PageContent.HighlightPageList(list_id);
+							Biscuit.Crumbs.HideCoverThrobber(top_level_parent_id);
 						}
 					});
 				}

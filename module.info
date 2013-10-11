@@ -1,0 +1,4 @@
+name = "PageContent"
+description = "Management of pages and static content"
+version = "2.2"
+dependencies[] = "TinyMce"

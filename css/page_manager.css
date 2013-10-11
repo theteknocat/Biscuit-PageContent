@@ -15,19 +15,19 @@ dl.page-manager-list dd {
 }
 
 dl.page-manager-list dd div.page-item-container {
-	height: 20px;
 	position: relative;
 }
 
-dl.page-manager-list dd div.page-item-container div.page-link-container {
-	height: 20px;
-	float: left;
+dl.page-manager-list dd div.page-item-container .clearance {
+	height: 0;
+	line-height: 0;
+	font-size: 0;
+	clear: both;
 }
 
-dl.page-manager-list dd a {
-	line-height: 20px;
-	height: 20px;
-	padding: 0 0 0 5px;
+dl.page-manager-list div.page-item-container div.page-link-container {
+	font-size: 12px !important;
+	margin: 0 0 0 25px;
 }
 
 dl.page-manager-list dd dl {
@@ -84,26 +84,22 @@ form#page-form .meta-data textarea {
 	height: 60px;
 }
 
-form#page-form p span.instructions {
-	margin: 0;
+form#page-form span.instructions {
+	margin: 8px 0 0;
 }
 
 fieldset.page-list-container div.page-list-content {
 	position: relative;
+	margin: 8px 0 0;
 }
 
-.page-manager-list div.draggable {
+.page-manager-list div.drag-handle {
 	float: left;
 	width: 15px;
 	height: 15px;
 	padding: 5px 0 0 5px;
-	background: url(/modules/page_content/images/move-icon.gif) 5px center no-repeat;
+	/* From ui-icon-triangle-2-n-s, but tweaked to best fit the size of the draggable icons */
+	background-position: -124px -14px;
 	text-indent: -3000em;
 	cursor: move;
-}
-
-.page-list-throbber {
-	position: absolute;
-	left: 0;
-	top: -18px;
 }

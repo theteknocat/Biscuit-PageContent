@@ -19,7 +19,7 @@ var PageContent = {
 	},
 	HighlightPageList: function(list_id) {
 		$('#'+list_id+' > dd').each(function() {
-			$(this).effect('highlight',{color: '#93f586'},1000,function() {
+			$(this).effect('highlight',{color: '#7ac2f4'},1000,function() {
 				$(this).css({'background': ''});
 			});
 		});

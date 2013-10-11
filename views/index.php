@@ -25,6 +25,9 @@
 					tr[class|style],
 					td[width|align|valign|style|class]";
 	$admin_buttons = array();
+	if ($PageContentManager->user_can_create() && $page->slug() != 'index') {
+		$admin_buttons[] = array('href' => $PageContentManager->url('new').'?page_defaults[parent]='.$page->id().'&amp;return_url='.rawurlencode(Request::uri()), 'label' => 'New Sub-Page', 'classname' => 'new-button');
+	}
 	if ($PageContentManager->user_can_manage_pages()) {
 		$admin_buttons[] = array('href' => $PageContentManager->url('manage_pages'), 'label' => 'Manage Pages');
 	}
