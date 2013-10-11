@@ -1,0 +1,108 @@
+dl.page-manager-list {
+	margin: 0;
+	overflow: hidden;
+}
+
+dl.page-manager-list dt {
+	height: 20px;
+	padding: 5px;
+}
+
+dl.page-manager-list dd {
+	padding: 5px 0;
+	margin: 0;
+	position: relative;
+}
+
+dl.page-manager-list dd div.page-item-container {
+	height: 20px;
+	position: relative;
+}
+
+dl.page-manager-list dd div.page-item-container div.page-link-container {
+	margin: 0 0 0 20px;
+}
+
+dl.page-manager-list dd a {
+	line-height: 20px;
+	height: 20px;
+	padding: 0 0 0 5px;
+}
+
+dl.page-manager-list dd dl {
+	margin: 5px 0 0;
+	position: relative;
+}
+
+dl.page-manager-list dd dd {
+	margin: 0 0 0 20px;
+}
+
+dl.page-manager-list dd.has-children {
+	padding: 5px 0 0;
+}
+
+dl.page-manager-list dd.stripe-odd {
+	background: #eee;
+}
+
+dl.page-manager-list dd.stripe-even {
+	background: #ddd;
+}
+
+dl.page-manager-list div.controls {
+	float: right;
+	background: none;
+	border: none;
+	padding: 0 5px 0 0;
+	margin: 0;
+}
+
+dl.page-manager-list div.controls a {
+	font-size: 10px;
+	line-height: 16px;
+	height: 16px;
+	padding: 1px 10px;
+}
+
+form#page-form label {
+	float: none;
+	width: auto;
+	text-align: left;
+}
+
+form#page-form .field-container label {
+	float: left;
+}
+
+form#page-form textarea {
+	width: 620px;
+}
+
+form#page-form .meta-data textarea {
+	height: 60px;
+}
+
+form#page-form p span.instructions {
+	margin: 0;
+}
+
+fieldset.page-list-container div.page-list-content {
+	position: relative;
+}
+
+.page-manager-list div.draggable {
+	float: left;
+	width: 15px;
+	height: 15px;
+	padding: 4px 0 0 5px;
+	background: url(/modules/page_content/images/move-icon.gif) 5px center no-repeat;
+	text-indent: -3000em;
+	cursor: move;
+}
+
+.page-list-throbber {
+	position: absolute;
+	left: 0;
+	top: -18px;
+}
