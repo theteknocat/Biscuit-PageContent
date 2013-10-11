@@ -20,7 +20,8 @@ dl.page-manager-list dd div.page-item-container {
 }
 
 dl.page-manager-list dd div.page-item-container div.page-link-container {
-	margin: 0 0 0 20px;
+	height: 20px;
+	float: left;
 }
 
 dl.page-manager-list dd a {
@@ -95,7 +96,7 @@ fieldset.page-list-container div.page-list-content {
 	float: left;
 	width: 15px;
 	height: 15px;
-	padding: 4px 0 0 5px;
+	padding: 5px 0 0 5px;
 	background: url(/modules/page_content/images/move-icon.gif) 5px center no-repeat;
 	text-indent: -3000em;
 	cursor: move;

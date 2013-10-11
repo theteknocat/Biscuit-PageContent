@@ -24,7 +24,6 @@
 					table[width|cellpadding|cellspacing|border|class|style],
 					tr[class|style],
 					td[width|align|valign|style|class]";
-	$date = new Date($page->updated());
 	$admin_buttons = array();
 	if ($PageContentManager->user_can_manage_pages()) {
 		$admin_buttons[] = array('href' => $PageContentManager->url('manage_pages'), 'label' => 'Manage Pages');
@@ -38,5 +37,9 @@
 		'del_button_rel' => 'this page',
 		'custom_buttons' => $admin_buttons
 	));
-	echo H::purify_html($page->content(),array('allowed' => $allowed_html));
+	$fcache = new FragmentCache('Page',$page->id());
+	if ($fcache->start('full-page-content')) {
+		echo H::purify_html($page->content(),array('allowed' => $allowed_html));
+		$fcache->end('full-page-content');
+	}
 ?>

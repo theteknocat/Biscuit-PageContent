@@ -32,6 +32,8 @@ $date = new Date();
 		<legend>Content</legend>
 		<?php echo ModelForm::text($page,'title') ?>
 
+		<?php echo ModelForm::text($page,'navigation_label','This will be used for menus and breadcrumbs, if provided, instead of the page title.'); ?>
+
 		<?php echo ModelForm::textarea($page,'content', true, $allowed_html) ?>
 
 	</fieldset>
@@ -42,11 +44,11 @@ $date = new Date();
 		<?php echo ModelForm::textarea($page,'keywords') ?>
 
 	</fieldset>
-	<?php
-	if ($page->slug() != "index" && $PageContentManager->user_can_manage_pages()) {
-		?>
 	<fieldset>
-		<legend>Menu Properties</legend>
+		<legend>Navigation</legend>
+			<?php
+			if ($page->slug() != "index" && $PageContentManager->user_can_manage_pages()) {
+			?>
 			<p class="<?php echo $Navigation->tiger_stripe('striped_Page_form') ?>">
 				<label for="attr_parent">*Parent Menu:</label><select name="page[parent]" id="attr_parent">
 				<?php echo $PageContentManager->render_parent_option_list($page->parent()) ?>
@@ -55,18 +57,20 @@ $date = new Date();
 					You can modify the sort order by drag-and-drop from the Manage Pages page after saving.
 				</span>
 			</p>
-			<?php echo ModelForm::radios(array(
-				array(
-					'label' => 'Yes',
-					'value' => 1
-				),
-				array(
-					'label' => 'No',
-					'value' => 0
-				)), $page, 'exclude_from_nav', 'Choosing "Yes" will exclude the page from navigation menus, but not from breadcrumbs.') ?>
+			<?php
+			}
+			echo ModelForm::radios(array(
+			array(
+				'label' => 'Yes',
+				'value' => 1
+			),
+			array(
+				'label' => 'No',
+				'value' => 0
+			)), $page, 'exclude_from_nav', 'Choosing "Yes" will exclude the page from navigation menus, but not from breadcrumbs.');
+			?>
 	</fieldset>
-		<?php
-	}
+	<?php
 	if ($PageContentManager->user_can_manage_pages()) {
 		?>
 	<fieldset>
@@ -85,9 +89,8 @@ $date = new Date();
 	?>
 	<?php echo Form::footer($PageContentManager, $page, $PageContentManager->user_can_delete($page), 'Save', $PageContentManager->return_url('Page'), 'this page') ?>
 <script type="text/javascript" charset="utf-8">
-	document.observe("dom:loaded",function() {
-		PageContent.AddEditHandlers();
-		Biscuit.Session.KeepAlive.init_form_observer();
+	$(document).ready(function() {
+		Biscuit.Crumbs.Forms.AddValidation('page-form');
 	});
 	tinyMCE.init({
 		mode : "exact",
@@ -105,6 +108,7 @@ $date = new Date();
 		theme_advanced_resize_horizontal: false,
 		theme_advanced_statusbar_location: 'bottom',
 		theme_advanced_blockformats: "p,h1,h2,h3,h4",
+		element_format: 'html',
 		relative_urls: false,
 		remove_script_host: true,
 		document_base_url: "<?php echo STANDARD_URL ?>/",
@@ -115,19 +119,7 @@ $date = new Date();
 		cleanup_on_startup: true,
 		<?php echo $Biscuit->ExtensionTinyMce()->theme_css_setting($page) ?>
 		external_link_list_url : "/tiny_mce_link_list",
-		plugins : "table,style,iespell,insertdatetime,preview,media,searchreplace,contextmenu,directionality,fullscreen,noneditable,visualchars,nonbreaking,template,inlinepopups",
-		<?php
-		if ($PageContentManager->user_can_manage_pages()) {
-			// Add the TinyBrowser plugin to the RTE:
-			?>
-		file_browser_callback : "tinyBrowser",
-			<?php
-		}
-		?>
-		setup: function(ed) {
-			ed.onChange.add(function() {
-				Biscuit.Session.KeepAlive.ping();
-			});
-		}
+		plugins : "table,safari,style,iespell,insertdatetime,preview,media,searchreplace,contextmenu,paste,directionality,fullscreen,noneditable,visualchars,nonbreaking,template,inlinepopups",
+		file_browser_callback : "tinyBrowser"
 	});
 </script>

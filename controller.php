@@ -17,7 +17,7 @@ class PageContentManager extends AbstractModuleController {
 	 *
 	 * @var array
 	 */
-	protected $_dependencies = array("Authenticator","HtmlPurify","new" => "TinyMce", "edit" => "TinyMce", "manage_pages" => "TinyMce");
+	protected $_dependencies = array("HtmlPurify","new" => "TinyMce", "edit" => "TinyMce", "manage_pages" => "TinyMce");
 	/**
 	 * List of actions that require an ID in the request, in addition to the base actions that always require an id (show, edit, delete)
 	 *
@@ -65,7 +65,11 @@ class PageContentManager extends AbstractModuleController {
 			foreach ($other_menus as $menu) {
 				$menu_list = $this->Biscuit->ExtensionNavigation()->render_pages_hierarchically($sorted_pages, $menu->id(), Navigation::WITH_CHILDREN, 'modules/page_content/views/manage_pages_list.php',array('top_level' => true, 'top_level_parent_id' => $menu->id()));
 				if (!empty($menu_list)) {
-					$page_list .= '<fieldset class="page-list-container" id="page-list-container-'.$menu->id().'"><legend>'.$menu->name().'</legend>'.$menu_list.'</fieldset>';
+					$page_list .= '<fieldset class="page-list-container" id="page-list-container-'.$menu->id().'"><legend>'.$menu->name().'</legend>';
+					if ($menu->admin_description()) {
+						$page_list .= '<p class="small">'.$menu->admin_description().'</p>';
+					}
+					$page_list .= $menu_list.'</fieldset>';
 				}
 			}
 		}
@@ -121,7 +125,7 @@ class PageContentManager extends AbstractModuleController {
 				}
 			}
 			if ($children_allow_delete) {
-				return (Permissions::user_can($this,'delete') || ($this->Biscuit->ModuleAuthenticator()->user_is_logged_in() && $page->owner_id() == $this->Biscuit->ModuleAuthenticator()->active_user()->id()));
+				return ((Permissions::user_can($this,'delete') && $page->access_level() <= $this->Biscuit->ModuleAuthenticator()->active_user()->user_level()) || ($this->Biscuit->ModuleAuthenticator()->user_is_logged_in() && $page->owner_id() == $this->Biscuit->ModuleAuthenticator()->active_user()->id()));
 			}
 		}
 		return false;
@@ -156,14 +160,20 @@ class PageContentManager extends AbstractModuleController {
 		}
 	}
 	/**
-	 * Special check to see if the current user can edit the page based on if they are super admin or if they own the page in question.
+	 * Special check to see if the current user can edit a given page. They are allowed to edit if they pass standard permission check or
+	 * they are the owner of the page.
 	 *
 	 * @param Page $page 
 	 * @return void
 	 * @author Peter Epp
 	 */
-	public function user_can_edit(Page $page) {
-		return (Permissions::user_can($this,'edit') || ($this->Biscuit->ModuleAuthenticator()->user_is_logged_in() && $page->owner_id() == $this->Biscuit->ModuleAuthenticator()->active_user()->id()));
+	public function user_can_edit($page = null) {
+		if (empty($page) && !empty($this->params['id'])) {
+			$page = $this->Page->find($this->params['id']);
+		} else {
+			$page = $this->Page->find($this->Biscuit->Page->id());
+		}
+		return ((Permissions::user_can($this,'edit') && $page->access_level() <= $this->Biscuit->ModuleAuthenticator()->active_user()->user_level()) || ($this->Biscuit->ModuleAuthenticator()->user_is_logged_in() && $page->owner_id() == $this->Biscuit->ModuleAuthenticator()->active_user()->id()));
 	}
 	/**
 	 * Do a special permission check for the edit action taking into account page content ownership, otherwise just defer to normal permission check
@@ -172,7 +182,7 @@ class PageContentManager extends AbstractModuleController {
 	 * @return bool
 	 * @author Peter Epp
 	 */
-	function user_can($action) {
+	public function user_can($action) {
 		if ($action == 'edit') {
 			if (empty($this->_page_being_edited)) {
 				if (!empty($this->params['id'])) {
@@ -181,7 +191,10 @@ class PageContentManager extends AbstractModuleController {
 					Console::log("WARNING: No Page model cached and no page id provided in params for edit permission check. User may be denied permission to edit.");
 				}
 			}
-			return (Permissions::user_can($this,'edit') || ($this->Biscuit->ModuleAuthenticator()->user_is_logged_in() && $this->_page_being_edited !== null && $this->Biscuit->ModuleAuthenticator()->active_user()->id() == $this->_page_being_edited->owner_id()));
+			return $this->user_can_edit($this->_page_being_edited);
+		} else if ($action == 'delete') {
+			$page = $this->Page->find($this->params['id']);
+			return $this->user_can_delete($page);
 		}
 		return Permissions::user_can($this,$action);
 	}
@@ -304,6 +317,27 @@ class PageContentManager extends AbstractModuleController {
 		}
 		if (!empty($tb_browser_script)) {
 			$this->Biscuit->append_view_var('footer',$tb_browser_script);
+		}
+	}
+	/**
+	 * Add page management links to admin menu for users with permission when not on the content_editor page
+	 *
+	 * @param object $caller 
+	 * @return void
+	 * @author Peter Epp
+	 */
+	protected function act_on_build_admin_menu($caller) {
+		$menu_items = array();
+		if ($this->Biscuit->Page->slug() != 'content_editor') {
+			if ($this->user_can_manage_pages() && $this->action() != "manage_pages") {
+				$menu_items['Manage'] = $this->url('manage_pages');
+			}
+			if ($this->user_can_create()) {
+				$menu_items['Create New'] = $this->url('new');
+			}
+		}
+		if (!empty($menu_items)) {
+			$caller->add_admin_menu_items('Pages',$menu_items);
 		}
 	}
 	/**

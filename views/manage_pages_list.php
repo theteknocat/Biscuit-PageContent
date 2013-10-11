@@ -11,7 +11,7 @@ if (!empty($pages[$current_parent_id])) {
 			if ($has_children) {
 				$extra_classname = ' has-children';
 			}
-			?><dd id="list-page_<?php echo $page->id() ?>" class="<?php echo $Navigation->tiger_stripe('manage-pages-list'); echo $extra_classname ?>"><div class="page-item-container"><?php
+			?><dd id="list-page_<?php echo $page->id() ?>" class="<?php echo $Navigation->tiger_stripe('manage-pages-list-'.$top_level_parent_id); echo $extra_classname ?>"><div class="page-item-container"><?php
 			if ($PageContentManager->user_can_edit($page) || $PageContentManager->user_can_delete($page)) {
 				?><div class="controls"><?php
 				if ($PageContentManager->user_can_delete($page)) {
@@ -26,7 +26,9 @@ if (!empty($pages[$current_parent_id])) {
 				}
 				?></div><?php
 			}
-			?><div id="drag-handle-<?php echo $page->id() ?>" class="draggable" style="display: none">Drag</div><div class="page-link-container"><a class="page-link" href="<?php echo $page->url() ?>"><?php echo $page->title() ?></a><?php
+			?><div id="drag-handle-<?php echo $page->id() ?>" class="draggable" style="display: none">Drag</div><div class="page-link-container"><a class="page-link" href="<?php echo $page->url() ?>"><?php
+			echo $page->navigation_title();
+			?></a><?php
 			if ($page->slug() == 'index') {
 				?> <span class="small">(Home Page)</span><?php
 			} else if ($page->access_level() > PUBLIC_USER) {
@@ -42,26 +44,5 @@ if (!empty($pages[$current_parent_id])) {
 	</dl>
 </div>
 <?php
-	if (count($pages[$current_parent_id]) > 1) {
-?>
-<script type="text/javascript" charset="utf-8">
-	jQuery(document).ready(function() {
-		jQuery('#<?php echo $curr_menu_id ?> > dd > .page-item-container > .draggable').show();
-		Biscuit.Console.log("Adding sortable to page list with id <?php echo $curr_menu_id ?>");
-		Biscuit.Crumbs.Sortable.create('<?php echo $curr_menu_id ?>','dd','/content_editor',null,{
-			handle: 'draggable',
-			array_name: 'page_sort',
-			throbber_id: 'page-list-throbber-<?php echo $top_level_parent_id ?>',
-			onChange: function() {
-				PageContent.RestripePageList('page-list-<?php echo $top_level_parent_id ?>');
-			},
-			onUpdate: function() {
-				PageContent.HighlightPageList('<?php echo $curr_menu_id ?>');
-			}
-		});
-	})
-</script>
-<?php
-	}
 }
 ?>

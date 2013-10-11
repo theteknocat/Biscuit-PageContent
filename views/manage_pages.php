@@ -15,14 +15,36 @@ print $Navigation->render_admin_bar($PageContentManager,NULL,array(
 </noscript>
 <?php echo $page_list ?>
 <script type="text/javascript" charset="utf-8">
-	document.observe('dom:loaded',function() {
-		$('file-manager-button').observe('click',function(event) {
-			Event.stop(event);
+	var sortable_request_token = '<?php echo RequestTokens::get() ?>';
+	$(document).ready(function() {
+		$('#file-manager-button').click(function() {
 			tinyBrowserPopUp('file',null);
+			return false;
 		});
-		$('image-manager-button').observe('click',function(event) {
-			Event.stop(event);
+		$('#image-manager-button').click(function() {
 			tinyBrowserPopUp('image',null);
+			return false;
+		});
+		$('.page-list-container').each(function() {
+			var my_id = $(this).attr('id').substr(20);	// Everything after "page-list-container-"
+			var top_level_parent_id = "page-list-"+my_id;
+			var throbber_id = 'page-list-throbber-'+my_id;
+			$(this).find('dl.page-manager-list').each(function() {
+				if ($(this).children('dd').length > 1) {
+					$(this).children('dd').children('.page-item-container').children('.draggable').show();
+					Biscuit.Crumbs.Sortable.create(this,'/content_editor',{
+						handle: '.draggable',
+						array_name: 'page_sort',
+						throbber_id: throbber_id,
+						onUpdate: function() {
+							PageContent.RestripePageList(top_level_parent_id);
+						},
+						onFinish: function(list_id) {
+							PageContent.HighlightPageList(list_id);
+						}
+					});
+				}
+			});
 		});
 	});
 </script>

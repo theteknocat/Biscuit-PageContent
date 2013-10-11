@@ -5,8 +5,7 @@ if (!empty($pages[$current_parent_id])) {
 			$slug_bits = explode('/',$page->slug());
 			$indent = count($slug_bits);
 			$indent_str = str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;',$indent);
-			$page_title = $page->title();
-			$page_title = $indent_str.H::purify_text($page->title());
+			$page_title = $indent_str.H::purify_text($page->navigation_title());
 			if ($page->access_level() > PUBLIC_USER) {
 				$page_title .= ' ('.$page->access_level_name().' access required)';
 			}
@@ -17,4 +16,3 @@ if (!empty($pages[$current_parent_id])) {
 		}
 	}
 }
-?>

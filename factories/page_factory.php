@@ -49,7 +49,8 @@ class PageFactory extends ModelFactory {
 	public function find_all_editable() {
 		// Get the ID of this module:
 		$module_id = DB::fetch_one("SELECT `id` FROM `modules` WHERE `name` = 'PageContent'");
-		$query = "SELECT `pi`.* FROM `page_index` `pi` LEFT JOIN `module_pages` `mp` ON (`pi`.`slug` = `mp`.`page_name` AND `mp`.`module_id` = {$module_id}) WHERE `pi`.`parent` != 9999999 AND `pi`.`access_level` < 99 AND `mp`.`id` IS NOT NULL";
+		$active_user_level = Biscuit::instance()->ModuleAuthenticator()->active_user()->user_level();
+		$query = "SELECT `pi`.* FROM `page_index` `pi` LEFT JOIN `module_pages` `mp` ON (`pi`.`slug` = `mp`.`page_name` AND `mp`.`module_id` = {$module_id}) WHERE `pi`.`parent` != 9999999 AND `pi`.`access_level` <= {$active_user_level} AND `mp`.`id` IS NOT NULL";
 		return parent::models_from_query($query);
 	}
 	/**
